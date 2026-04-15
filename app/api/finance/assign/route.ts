@@ -33,14 +33,14 @@ export async function POST(req: NextRequest) {
     const supabase = await createSupabaseServerClient();
 
     const txRepo = new TransactionRepository(supabase);
+    const debtRepo = new DebtRepository(supabase);
+    const allocationRepo = new AllocationRepository(supabase);
 
-    const useCase = new AssignPaymentToDebtUseCase(txRepo);
-
-    await useCase.execute({
-      paymentId: body.paymentId,
-      debtId: body.debtId,
-      tenantId,
-    });
+    const useCase = new AssignPaymentToDebtUseCase(
+      txRepo,
+      debtRepo,
+      allocationRepo,
+    );
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

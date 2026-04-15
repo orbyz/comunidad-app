@@ -51,7 +51,11 @@ export default function IncidentTimeline({
           return (
             <div key={item.id} className="flex flex-col">
               <div className="bg-white border rounded-xl p-3 shadow-sm max-w-md">
-                <p className="text-sm text-gray-800">{item.content}</p>
+                <p className="text-sm text-gray-800">
+                  {"content" in item
+                    ? item.content
+                    : `${item.action} → ${item.to}`}
+                </p>
               </div>
 
               <div className="text-xs text-gray-400 mt-1">
@@ -68,17 +72,17 @@ export default function IncidentTimeline({
         // 🔵 HISTORY HUMANIZADO
         let text = "";
 
-        switch (item.action) {
-          case "STATUS_CHANGED":
-            text = `Estado cambiado a ${item.to?.status || "desconocido"}`;
-            break;
+        if ("action" in item) {
+          switch (item.action) {
+            case "STATUS_CHANGED":
+              text = `Estado cambiado a ${item.to?.status || "desconocido"}`;
+              break;
 
-          case "ASSIGNED":
-            text = "Incidencia asignada";
-            break;
-
-          default:
-            text = item.action;
+            default:
+              text = "Acción desconocida";
+          }
+        } else if ("content" in item) {
+          text = item.content;
         }
 
         return (

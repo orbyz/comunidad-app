@@ -12,3 +12,5 @@ export type Payment = {
 };
 
 export type PaymentMethod = "PAGOMOVIL" | "TRANSFERENCIA" | "EFECTIVO";
+
+export * from "./debts.types";
