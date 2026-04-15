@@ -1,0 +1,74 @@
+import { supabase } from "@/lib/db/supabase";
+import { Payment } from "./payments.types";
+import { allocatePayment } from "../finance/allocation.service";
+
+export async function createPayment(data: {
+  amount: number;
+  method: string;
+  reference?: string;
+  user_id?: string;
+  property_id?: string;
+}) {
+  if (!data.amount || data.amount <= 0) {
+    throw new Error("Monto inválido");
+  }
+
+  const { data: payment, error } = await supabase
+    .from("payments")
+    .insert([
+      {
+        amount: data.amount,
+        method: data.method,
+        reference: data.reference,
+        user_id: data.user_id,
+        property_id: data.property_id,
+      },
+    ])
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+
+  return payment as Payment;
+}
+
+export async function getPayments() {
+  const { data, error } = await supabase
+    .from("payments")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+
+  return data as Payment[];
+}
+
+// payments.service.ts
+
+export async function verifyPayment(paymentId: string) {
+  const { data, error } = await supabase
+    .from("payments")
+    .update({ status: "VERIFIED" })
+    .eq("id", paymentId)
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+
+  await allocatePayment(paymentId);
+
+  return data;
+}
+
+export async function rejectPayment(paymentId: string) {
+  const { data, error } = await supabase
+    .from("payments")
+    .update({ status: "REJECTED" })
+    .eq("id", paymentId)
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+
+  return data;
+}

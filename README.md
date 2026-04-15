@@ -1,36 +1,191 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+COMUNIDAD APP:
 
-## Getting Started
+# 📦 Módulo: Incidencias (Estado Actual)
 
-First, run the development server:
+## ✅ Funcionalidades Implementadas
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### 1. Creación de Incidencias
+
+* Creación desde modal
+* Validación de campos (title, description)
+* Asignación automática de `property_id`
+* Control por rol (ADMIN / RESIDENTE)
+
+### 2. Listado de Incidencias
+
+* Renderizado en lista (LEFT panel)
+* Selección de incidencia
+* Multi-tenant (filtrado por propiedad)
+* Residente solo ve sus incidencias
+
+### 3. Detalle de Incidencia
+
+* Visualización completa (RIGHT panel)
+* Estado, prioridad, descripción
+* Sincronización con backend
+
+### 4. Timeline
+
+* Comentarios + historial unificados
+* Orden cronológico
+* Sin duplicados
+* Visual tipo chat
+* Usuario visible (nombre/email)
+
+### 5. Comentarios
+
+* Crear comentario
+* Persistencia en DB
+* Realtime (Supabase)
+
+### 6. Estados
+
+* OPEN → IN_PROGRESS → RESOLVED
+* Persistencia correcta
+* Registro en history
+
+### 7. Followers
+
+* Unirse a incidencia
+* Contador de afectados
+
+### 8. Seguridad (Multi-tenant)
+
+* Filtro por `property_id`
+* Override backend (no confiar en frontend)
+* Protección por roles
+
+### 9. UX Básica
+
+* Manejo de errores
+* Fallbacks seguros
+* UI consistente
+
+---
+
+## ⚠️ Funcionalidades NO Incluidas (Fase 2)
+
+* Filtros avanzados
+* Búsqueda
+* Adjuntos (imagenes/documentos)
+* Notificaciones
+* SLA / tiempos de resolución
+* Prioridad automática
+* Asignación automática de técnicos
+
+---
+
+## 🧠 Estado del Módulo
+
+✔ Funcional
+✔ Estable
+✔ Escalable
+
+👉 **Módulo listo para producción básica**
+
+---
+
+# 🚀 Siguiente Módulo: Finanzas / Pagos
+
+## 🎯 Objetivo
+
+Gestionar:
+
+* Deudas
+* Pagos
+* Balance por propiedad
+* Validación de pagos
+
+---
+
+## 🧱 Lo que YA existe (según proyecto)
+
+* Tabla `payments`
+* Tabla `debts`
+* API básica de pagos
+* Dashboard financiero inicial
+
+---
+
+## ⚠️ Problema actual
+
+Actualmente el módulo está:
+
+* Parcialmente implementado
+* No estructurado
+* Mezcla lógica de negocio + UI
+
+👉 Necesitamos **reorganizar antes de continuar**
+
+---
+
+# 🧭 PLAN CORRECTO (FASE 1 - ORGANIZACIÓN)
+
+## 1. Estructura de carpetas
+
+```
+lib/modules/finance/
+  ├── finance.types.ts
+  ├── finance.repository.ts
+  ├── finance.service.ts
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 2. Separación clara
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Repository
 
-## Learn More
+* Acceso a DB
 
-To learn more about Next.js, take a look at the following resources:
+### Service
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+* Lógica de negocio
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### API
 
-## Deploy on Vercel
+* Validación + control de acceso
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 3. Entidades clave
+
+### Payments
+
+* id
+* property_id
+* amount
+* method
+* status (PENDING / VERIFIED / REJECTED)
+
+### Debts
+
+* id
+* property_id
+* amount
+* due_date
+* status
+
+---
+
+## 4. Casos de uso iniciales
+
+### ADMIN
+
+* Ver pagos
+* Ver deudas
+* Verificar pago
+* Rechazar pago
+
+### RESIDENTE
+
+* Ver balance
+* Ver deudas
+* Registrar pago
+
+---
+
+
+---
+
+**Continuara.**
