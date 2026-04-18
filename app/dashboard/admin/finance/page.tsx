@@ -1,10 +1,11 @@
-import FinanceDashboard from "@/components/finance/FinanceDashboard";
+import { redirect } from "next/navigation";
 import { getUserContext } from "@/lib/auth/getUserContext";
 import { createSupabaseServerClient } from "@/lib/auth/supabaseServer";
 
 import { PaymentRepository } from "@/lib/modules/finance/repository/payment.repository";
 import { DebtRepository } from "@/lib/modules/finance/repository/debt.repository";
 import { AllocationRepository } from "@/lib/modules/finance/repository/allocation.repository";
+
 import FinanceDashboardAdmin from "@/components/finance/FinanceDashboardAdmin";
 
 import { GetTenantLedgerUseCase } from "@/lib/modules/finance/use-cases/get-tenant-ledger.usecase";
@@ -12,7 +13,14 @@ import { GetTenantLedgerUseCase } from "@/lib/modules/finance/use-cases/get-tena
 export default async function Page() {
   const context = await getUserContext();
 
-  if (!context) return <div>No autorizado</div>;
+  if (!context) {
+    redirect("/login");
+  }
+
+  // 🔐 RBAC PROTECCIÓN
+  if (!["ADMIN", "SUPER_ADMIN", "JUNTA"].includes(context.role)) {
+    redirect("/dashboard");
+  }
 
   const supabase = await createSupabaseServerClient();
 
@@ -20,6 +28,7 @@ export default async function Page() {
   const debtRepo = new DebtRepository(supabase);
   const allocationRepo = new AllocationRepository(supabase);
 
+  // ⚠️ TEMPORAL → usando tenant ledger (más adelante harás global)
   const data = await new GetTenantLedgerUseCase(
     paymentRepo,
     debtRepo,
@@ -27,13 +36,6 @@ export default async function Page() {
   ).execute({
     tenantId: context.tenantId,
   });
-
-  // 🔥 ADAPTADOR (CLAVE)
-  const ledger = {
-    balance: data?.balance ?? 0,
-    debts: [],
-    payments: [],
-  };
 
   return <FinanceDashboardAdmin data={data} />;
 }

@@ -9,6 +9,7 @@ import {
   Home,
   Menu,
   AlertTriangle,
+  DollarSign,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -88,6 +89,13 @@ export default function Sidebar({ role }: { role: string }) {
             >
               <AlertTriangle size={18} />
               {!collapsed && "Incidencias"}
+            </Link>
+            <Link
+              href="/dashboard/admin/finance"
+              className={linkClass("/dashboard/admin/finance")}
+            >
+              <DollarSign size={18} />
+              {!collapsed && "Finanzas"}
             </Link>
           </div>
         )}
