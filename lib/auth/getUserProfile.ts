@@ -19,7 +19,18 @@ export async function getUserProfile() {
   // 🔐 1. Auth user
   const {
     data: { user },
+    error: authError,
   } = await supabase.auth.getUser();
+
+  // 🔥 manejar error de sesión inexistente (IMPORTANTE)
+  if (authError) {
+    if (authError.code === "refresh_token_not_found") {
+      return null; // no hay sesión → normal
+    }
+
+    console.error("AUTH ERROR:", authError);
+    return null;
+  }
 
   if (!user) return null;
 
@@ -30,17 +41,23 @@ export async function getUserProfile() {
     .eq("id", user.id)
     .single();
 
-  if (profileError) throw profileError;
+  if (profileError) {
+    console.error("PROFILE ERROR:", profileError);
+    return null;
+  }
 
-  // 🏠 3. Property relation (IMPORTANT)
+  // 🏠 3. Property relation
   const { data: residents, error: residentError } = await supabase
     .from("property_residents")
     .select("property_id")
     .eq("user_id", user.id);
 
-  if (residentError) throw residentError;
+  if (residentError) {
+    console.error("RESIDENT ERROR:", residentError);
+    return null;
+  }
 
-  // 🔥 tomar la primera (MVP)
+  // 🔥 MVP: primera propiedad
   const property_id = residents?.[0]?.property_id || null;
 
   return {
