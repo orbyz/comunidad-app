@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GetTimelineUseCase } from "@/lib/modules/finance/use-cases/get-timeline.usecase";
-import { PaymentRepository } from "@/lib/modules/finance/repository/payment.repository";
+import { PaymentRepository } from "@/lib/modules/payments/repository/payment.repository";
 import { DebtRepository } from "@/lib/modules/finance/repository/debt.repository";
 import { AllocationRepository } from "@/lib/modules/finance/repository/allocation.repository";
 import { createSupabaseServerClient } from "@/lib/auth/supabaseServer";

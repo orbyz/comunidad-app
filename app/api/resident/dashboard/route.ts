@@ -8,8 +8,6 @@ export async function GET() {
     // 🔐 Perfil completo (source of truth)
     const profile = await getUserProfile();
 
-    console.log("PROFILE DASHBOARD:", profile);
-
     if (!profile) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

@@ -113,24 +113,19 @@ export async function POST(req: NextRequest) {
     }
 
     const userId = authUser.user?.id;
-    console.log("STEP 1 AUTH OK");
 
     // 🔹 2. Insertar en USERS (core)
-    console.log("AUTH USER:", authUser);
     const { error: userError } = await supabase.from("users").insert({
       id: userId,
       email,
       role,
       property_id: property_id || null, // opcional (legacy)
     });
-    console.log("STEP 2 USERS OK");
 
-    console.log("BODY:", body);
     if (userError) {
       console.error("USER INSERT ERROR:", userError);
       return NextResponse.json({ error: userError.message }, { status: 500 });
     }
-    console.log("STEP 3 INSERT PROFILE");
     // 🔹 3. PERFIL (datos personales)
     const { error: profileError } = await supabase.from("profiles").insert({
       id: userId,
@@ -138,7 +133,6 @@ export async function POST(req: NextRequest) {
       last_name,
       phone,
     });
-    console.log("STEP 4 PROFILE OK");
 
     if (profileError) {
       console.error("PROFILE ERROR:", profileError);
@@ -147,11 +141,6 @@ export async function POST(req: NextRequest) {
         { status: 500 },
       );
     }
-    console.log("PROFILE DATA:", {
-      first_name,
-      last_name,
-      phone,
-    });
 
     // 🔹 4. RELACIÓN CON PROPIEDAD (negocio real)
     if (property_id) {

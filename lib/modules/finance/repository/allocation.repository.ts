@@ -5,6 +5,7 @@ export type PaymentAllocation = {
   paymentId: string;
   debtId: string;
   amount: number;
+  tenantId: string;
   createdAt: Date;
 };
 
@@ -16,6 +17,7 @@ export class AllocationRepository {
     paymentId: string;
     debtId: string;
     amount: number;
+    tenantId: string;
   }): Promise<PaymentAllocation> {
     const { data: result, error } = await this.db
       .from("payment_allocations")
@@ -23,32 +25,39 @@ export class AllocationRepository {
         payment_id: data.paymentId,
         debt_id: data.debtId,
         amount: data.amount,
+        tenant_id: data.tenantId, // 🔥 CLAVE
       })
       .select()
       .single();
 
-    if (error) throw new Error(`AllocationRepository.create: ${error.message}`);
+    if (error) {
+      throw new Error(`AllocationRepository.create: ${error.message}`);
+    }
 
     return this.mapToDomain(result);
   }
 
-  // 🔹 Obtener total usado de un payment
+  // 🔹 Total asignado por pago
   async getTotalAllocated(paymentId: string): Promise<number> {
     const { data, error } = await this.db
       .from("payment_allocations")
       .select("amount")
       .eq("payment_id", paymentId);
 
-    if (error)
+    if (error) {
       throw new Error(
         `AllocationRepository.getTotalAllocated: ${error.message}`,
       );
+    }
 
-    return data.reduce((sum, row) => sum + row.amount, 0);
+    return (data || []).reduce(
+      (sum: number, row: any) => sum + Number(row.amount || 0),
+      0,
+    );
   }
 
-  // 🔹 Obtener allocations por payment
-  async findByPayment(paymentId: string) {
+  // 🔹 Allocations por pago
+  async findByPayment(paymentId: string): Promise<PaymentAllocation[]> {
     const { data, error } = await this.db
       .from("payment_allocations")
       .select("*")
@@ -59,42 +68,11 @@ export class AllocationRepository {
       throw new Error(`AllocationRepository.findByPayment: ${error.message}`);
     }
 
-    return data.map((row) => this.mapToDomain(row));
+    return (data || []).map(this.mapToDomain);
   }
 
-  async findByTenantAndUnit(tenantId: string, unitId: string) {
-    const { data, error } = await this.db
-      .from("payment_allocations")
-      .select(
-        `
-        id,
-        payment_id,
-        debt_id,
-        amount,
-        created_at,
-        debts!inner(property_id)
-      `,
-      )
-      .eq("tenant_id", tenantId)
-      .eq("debts.property_id", unitId);
-
-    if (error) {
-      console.error("ALLOCATION ERROR:", error);
-      throw new Error(error.message);
-    }
-
-    return (
-      data?.map((a: any) => ({
-        id: a.id,
-        paymentId: a.payment_id,
-        debtId: a.debt_id,
-        amount: a.amount,
-        createdAt: new Date(a.created_at),
-      })) || []
-    );
-  }
-
-  async findByTenant(tenantId: string) {
+  // 🔹 Allocations por tenant
+  async findByTenant(tenantId: string): Promise<PaymentAllocation[]> {
     const { data, error } = await this.db
       .from("payment_allocations")
       .select("*")
@@ -104,35 +82,48 @@ export class AllocationRepository {
       throw new Error(`AllocationRepository.findByTenant: ${error.message}`);
     }
 
-    if (!data || !Array.isArray(data)) return [];
-
-    const safeData = data.filter(
-      (a: any) =>
-        a &&
-        typeof a === "object" &&
-        a.id &&
-        a.debt_id &&
-        a.amount !== undefined,
-    );
-
-    return safeData.map((a: any) => ({
-      id: a.id,
-      paymentId: a.payment_id,
-      debtId: a.debt_id,
-      amount: Number(a.amount ?? 0),
-      createdAt: new Date(a.created_at),
-    }));
+    return (data || []).map(this.mapToDomain);
   }
 
-  // 🔹 Mapper
-  // 🔹 Mapper
-  private mapToDomain(row: any): PaymentAllocation {
-    return {
-      id: row.id,
-      paymentId: row.payment_id,
-      debtId: row.debt_id,
-      amount: row.amount,
-      createdAt: new Date(row.created_at),
-    };
+  // 🔹 Allocations por tenant + unidad (JOIN real)
+  async findByTenantAndUnit(tenantId: string, unitId: string) {
+    // 🔹 1. Obtener payments de esa unidad
+    const { data: payments, error: paymentsError } = await this.db
+      .from("payments")
+      .select("id")
+      .eq("tenant_id", tenantId)
+      .eq("property_id", unitId);
+
+    if (paymentsError) {
+      throw new Error(paymentsError.message);
+    }
+
+    if (!payments || payments.length === 0) return [];
+
+    const paymentIds = payments.map((p) => p.id);
+
+    // 🔹 2. Obtener allocations relacionadas
+    const { data, error } = await this.db
+      .from("payment_allocations")
+      .select("*")
+      .in("payment_id", paymentIds);
+
+    if (error) {
+      throw new Error(
+        `AllocationRepository.findByTenantAndUnit: ${error.message}`,
+      );
+    }
+
+    return (data || []).map(this.mapToDomain);
   }
+
+  // 🔹 Mapper consistente
+  private mapToDomain = (row: any): PaymentAllocation => ({
+    id: row.id,
+    paymentId: row.payment_id,
+    debtId: row.debt_id,
+    amount: Number(row.amount || 0),
+    tenantId: row.tenant_id,
+    createdAt: new Date(row.created_at),
+  });
 }

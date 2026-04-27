@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/db/supabase";
-import { Payment } from "./payments.types";
+import { Payment } from "./domain/payments.types";
 import { allocatePayment } from "../finance/allocation.service";
 
 export async function createPayment(data: {

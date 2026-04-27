@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GetLedgerUseCase } from "@/lib/modules/finance/use-cases/get-ledger.usecase";
-import { PaymentRepository } from "@/lib/modules/finance/repository/payment.repository";
+import { PaymentRepository } from "@/lib/modules/payments/repository/payment.repository";
 import { DebtRepository } from "@/lib/modules/finance/repository/debt.repository";
 import { AllocationRepository } from "@/lib/modules/finance/repository/allocation.repository";
 import { createSupabaseServerClient } from "@/lib/auth/supabaseServer";
@@ -18,9 +18,6 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const unitId = searchParams.get("unitId");
-
-    console.log("CONTEXT:", context);
-    console.log("UNIT ID:", unitId);
 
     // 🔐 RBAC
     if (role === "RESIDENTE") {
@@ -42,7 +39,6 @@ export async function GET(req: NextRequest) {
       tenantId,
       unitId: unitId!,
     });
-
     return NextResponse.json(result);
   } catch (error: any) {
     return NextResponse.json(

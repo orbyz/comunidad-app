@@ -1,89 +1,54 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import JoinPropertyModal from "@/components/ui/JoinPropertyModal";
 
 export default function ResidentDashboard() {
   const [data, setData] = useState<any>(null);
+  const [ledger, setLedger] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [openJoin, setOpenJoin] = useState(false);
+
+  async function loadData() {
+    try {
+      const [financeRes, ledgerRes] = await Promise.all([
+        fetch("/api/resident/dashboard"),
+        fetch("/api/ledger"),
+      ]);
+
+      const financeData = await financeRes.json();
+      const ledgerData = await ledgerRes.json();
+
+      setData(financeData);
+      setLedger(Array.isArray(ledgerData?.ledger) ? ledgerData.ledger : []);
+    } catch (err) {
+      console.error("Dashboard error:", err);
+      setData({ error: "Unexpected error" });
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    fetch("/api/resident/dashboard")
-      .then((res) => res.json())
-      .then((data) => {
-        setData(data);
-      })
-      .catch(() => {
-        setData({ error: "Unexpected error" });
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+    loadData();
   }, []);
 
   // 🔄 LOADING
-  if (loading) {
-    return <p className="p-6">Cargando...</p>;
-  }
+  if (loading) return <p className="p-6">Cargando...</p>;
 
-  // ⚠️ SIN PROPIEDAD (UX PRO)
-  if (data?.error === "No property assigned") {
-    return (
-      <div className="p-6 flex items-center justify-center h-full">
-        <div className="border rounded-2xl p-8 bg-yellow-50 max-w-md w-full text-center space-y-4">
-          <h2 className="text-lg font-semibold text-yellow-800">
-            Aún no perteneces a una comunidad
-          </h2>
-
-          <p className="text-sm text-gray-600">
-            Puedes solicitar acceso a tu administrador o unirte con un código de
-            invitación.
-          </p>
-
-          <div className="flex flex-col gap-2">
-            <button
-              onClick={() => alert("Función próximamente")}
-              className="bg-black text-white py-2 rounded-lg"
-            >
-              Solicitar acceso
-            </button>
-            <button
-              onClick={() => setOpenJoin(true)}
-              className="border py-2 rounded-lg"
-            >
-              Tengo un código
-            </button>
-            <JoinPropertyModal
-              open={openJoin}
-              onClose={() => setOpenJoin(false)}
-            />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ❌ ERROR GENÉRICO
+  // ❌ ERROR
   if (data?.error) {
     return (
       <div className="p-6">
-        <div className="border rounded-xl p-6 bg-red-50">
-          <h2 className="font-semibold text-red-700">Error cargando datos</h2>
-
-          <p className="text-sm text-gray-600 mt-1">
-            Inténtalo nuevamente más tarde.
-          </p>
-        </div>
+        <p className="text-red-600">Error cargando datos</p>
       </div>
     );
   }
 
-  // ✅ OK
+  // ✅ UI
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold">{data.property.name}</h1>
+      <h1 className="text-2xl font-bold">{data.property?.name}</h1>
 
+      {/* KPIs */}
       <div className="grid grid-cols-3 gap-4">
         <div className="p-4 border rounded-xl">
           <p className="text-sm text-gray-500">Deuda</p>
@@ -98,6 +63,32 @@ export default function ResidentDashboard() {
         <div className="p-4 border rounded-xl">
           <p className="text-sm text-gray-500">Balance</p>
           <p className="text-xl font-semibold">{data.balance} €</p>
+        </div>
+      </div>
+
+      {/* 🔥 ÚLTIMOS MOVIMIENTOS */}
+      <div>
+        <h2 className="text-lg font-semibold mb-2">Últimos movimientos</h2>
+
+        <div className="space-y-2">
+          {ledger.slice(0, 3).map((l) => (
+            <div
+              key={l.id}
+              className="flex justify-between text-sm border-b pb-2"
+            >
+              <div>
+                <p>{l.description}</p>
+                <p className="text-xs text-gray-500">
+                  {new Date(l.created_at).toLocaleDateString()}
+                </p>
+              </div>
+
+              <p className={l.amount > 0 ? "text-green-600" : "text-red-600"}>
+                {l.amount > 0 ? "+" : ""}
+                {l.amount} €
+              </p>
+            </div>
+          ))}
         </div>
       </div>
     </div>

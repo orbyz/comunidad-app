@@ -3,14 +3,17 @@ import { getUserContext } from "@/lib/auth/getUserContext";
 import { createSupabaseServerClient } from "@/lib/auth/supabaseServer";
 import { GetLedgerUseCase } from "@/lib/modules/finance/use-cases/get-ledger.usecase";
 import { GetTimelineUseCase } from "@/lib/modules/finance/use-cases/get-timeline.usecase";
-import { PaymentRepository } from "@/lib/modules/finance/repository/payment.repository";
+import { PaymentRepository } from "@/lib/modules/payments/repository/payment.repository";
 import { DebtRepository } from "@/lib/modules/finance/repository/debt.repository";
 import { AllocationRepository } from "@/lib/modules/finance/repository/allocation.repository";
+import { redirect } from "next/navigation";
 
 export default async function Page() {
   const context = await getUserContext();
 
-  if (!context) return <div>No autorizado</div>;
+  if (!context?.tenantId) {
+    redirect("/dashboard/resident");
+  }
 
   const { tenantId, propertyId } = context;
 
@@ -31,10 +34,6 @@ export default async function Page() {
       input,
     ),
   ]);
-  // console.log("🔥 PAGE FINANCE EJECUTANDO");
-  // console.log("CONTEXT:", context);
-  //  console.log("LEDGER:", JSON.stringify(ledger, null, 2));
-  // console.log("TIMELINE:", JSON.stringify(timeline, null, 2));
 
   return (
     <FinanceDashboard role="RESIDENTE" ledger={ledger} timeline={timeline} />

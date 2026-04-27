@@ -1,4 +1,4 @@
-import { PaymentRepository } from "../repository/payment.repository";
+import { PaymentRepository } from "@/lib/modules/payments/repository/payment.repository";
 import { DebtRepository } from "../repository/debt.repository";
 import { AllocationRepository } from "../repository/allocation.repository";
 

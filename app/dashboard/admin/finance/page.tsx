@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { getUserContext } from "@/lib/auth/getUserContext";
 import { createSupabaseServerClient } from "@/lib/auth/supabaseServer";
 
-import { PaymentRepository } from "@/lib/modules/finance/repository/payment.repository";
+import { PaymentRepository } from "@/lib/modules/payments/repository/payment.repository";
 import { DebtRepository } from "@/lib/modules/finance/repository/debt.repository";
 import { AllocationRepository } from "@/lib/modules/finance/repository/allocation.repository";
 
